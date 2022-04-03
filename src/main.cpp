@@ -163,7 +163,7 @@ const unsigned char tonyBitmap [] PROGMEM = {
 /*
  Calculate MOD (Maximum Operating Depth)
 */
-float max_po1 = 1.30;
+float max_po1 = 1.40;
 const float max_po2 = 1.60;
 float cal_mod_m (float percentage, float ppo2 = 1.4) {
   return 10 * ( (ppo2/(percentage/100)) - 1 );
@@ -173,6 +173,7 @@ float cal_mod_fsw (float percentage, float ppo2 = 1.4) {
   return 33 * ( (ppo2/(percentage/100)) - 1 );
 }
 
+#ifdef BEEPER
 void beep(int x=1) { // make beep for x time
   //digitalWrite(ledPin, HIGH); // led blink disable for battery save
   for(int i=0; i<x; i++) {    
@@ -182,6 +183,7 @@ void beep(int x=1) { // make beep for x time
   //digitalWrite(ledPin, LOW);
   //noTone(buzzer);
 }
+#endif
 
 void read_sensor(int adc=0) {  
   int16_t millivolts = 0;
@@ -225,7 +227,10 @@ void setup(void) {
     calibrationv = calibrate(0);
   }
   
+  #ifdef BEEPER
   beep(1);
+  #endif
+
 }
 
 void EEPROMWriteInt(int p_address, int p_value)
@@ -263,7 +268,10 @@ int calibrate(int x) {
   result = abs(result);
   EEPROMWriteInt(x, result); // write to eeprom
 
+#ifdef BEEPER
   beep(1);
+#endif
+
   delay(1000);
   active = 0;
   return result;
@@ -291,7 +299,7 @@ void analysing(int x, int cal) {
      display.println(F("Sensor"));
      display.print(F("Error!"));
   } else {
-    display.setTextSize(4);
+    display.setTextSize(2.9);
     display.print(result,1);
     display.println(F("%"));
 
@@ -300,7 +308,7 @@ void analysing(int x, int cal) {
     }
     
     display.setTextSize(1);
-    display.setCursor(0,31);
+    display.setCursor(0,21);
     display.setTextColor(BLACK, WHITE);    
     display.print(F("Max "));
     display.print(result_max,1);
@@ -310,25 +318,35 @@ void analysing(int x, int cal) {
     display.print(F("mv"));
      
     if (active % 4) {
-      display.setCursor(115,29);
+      display.setCursor(115,1);
       display.setTextColor(WHITE);
-      display.print(F("."));
+      display.print(F("*"));
     }  
     
     display.setTextColor(WHITE);
-    display.setCursor(0,40);
-    display.print(F("pO2 "));
-    display.print(max_po1,1);
-    display.print(F("/"));
-    display.print(max_po2,1);
-    display.print(F(" MOD"));
+    // display.setCursor(0,30);
+    // display.print(F("pO2 "));
+    // display.print(max_po1,1);
+    // display.print(F("/"));
+    // display.print(max_po2,1);
 
-    display.setTextSize(2);
+    display.setCursor(0,30);
+    display.print(F("pO2"));
+    display.setCursor(40,30);
+    display.print(F("MOD"));
+
+    display.setTextSize(1.5);
+    display.setCursor(0,40);
+    display.print(max_po1,1);
+    display.setCursor(40,40);
+    display.print(cal_mod_fsw(result,max_po1),1);
+    display.print(F("f "));
+    
     display.setCursor(0,50);
-    display.print(cal_mod_m(result,max_po1),1);
-    display.print(F("/"));
-    display.print(cal_mod_m(result,max_po2),1);
-    display.print(F("m "));
+    display.print(max_po2,1);
+    display.setCursor(40,50);
+    display.print(cal_mod_fsw(result,max_po2),1);
+    display.print(F("f "));
     
     // menu
     if (secs_held < 5 && active > 16) {
@@ -351,7 +369,11 @@ void analysing(int x, int cal) {
 }
 
 void lock_screen(long pause = 5000) {
+
+  #ifdef BEEPER
   beep(1);
+  #endif
+
   display.setTextSize(1);
   display.setCursor(0,31);  
   display.setTextColor(0xFFFF, 0);
@@ -379,7 +401,11 @@ void po2_change() {
   display.println(F("pO2 set"));
   display.print(max_po1);
   display.display();
+
+  #ifdef BEEPER
   beep(1);   
+  #endif
+
   delay(1000);
   active = 0;  
 }
@@ -393,7 +419,11 @@ void max_clear() {
   display.println(F("Max result"));
   display.print(F("cleared"));
   display.display();
+
+  #ifdef BEEPER
   beep(1);   
+  #endif
+
   delay(1000);
   active = 0;
 }
